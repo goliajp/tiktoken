@@ -43,6 +43,26 @@ impl Dict {
             Self::R50kBase => String::from("r50k_base"),
         }
     }
+
+    pub fn get_file(&self) -> &[u8] {
+        match self {
+            Self::Cl100kBase => include_bytes!("encodings/cl100k_base.tiktoken"),
+            Self::P50kBase => include_bytes!("encodings/p50k_base.tiktoken"),
+            Self::P50kEdit => include_bytes!("encodings/p50k_base.tiktoken"), // same to p50k_base
+            Self::R50kBase => include_bytes!("encodings/r50k_base.tiktoken"),
+        }
+    }
+
+    pub fn get_regex_pattern(&self) -> String {
+        match self {
+            Self::Cl100kBase => String::from(
+                r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+",
+            ),
+            _ => String::from(
+                r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+",
+            ),
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Hash)]
@@ -85,7 +105,6 @@ lazy_static! {
 
 pub struct Encoding {
     pub dict: Dict,
-    pub pattern: String,
     pub merging_ranks: HashMap<String, isize>,
     pub special_tokens: HashMap<String, isize>,
     pub explicit_vocab_size: isize,
@@ -114,7 +133,7 @@ impl Encoding {
 }
 
 fn cl100k_base() -> Result<Encoding, Error> {
-    let dict_data = include_bytes!("encodings/cl100k_base.tiktoken");
+    let dict_data = Dict::Cl100kBase.get_file();
     let merging_ranks = parse_dict_data(dict_data)?;
     let special_tokens = hashmap! {
         SpecialToken::EndOfText.to_string() => 100257,
@@ -126,15 +145,29 @@ fn cl100k_base() -> Result<Encoding, Error> {
 
     Ok(Encoding {
         dict: Dict::Cl100kBase,
-        pattern: r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+".to_string(),
         merging_ranks,
         special_tokens,
         explicit_vocab_size: 0,
     })
 }
 
+fn p50k_base() -> Result<Encoding, Error> {
+    let dict_data = Dict::P50kBase.get_file();
+    let merging_ranks = parse_dict_data(dict_data)?;
+    let special_tokens = hashmap! {
+        SpecialToken::EndOfText.to_string() => 50256,
+    };
+
+    Ok(Encoding {
+        dict: Dict::P50kBase,
+        merging_ranks,
+        special_tokens,
+        explicit_vocab_size: 50281,
+    })
+}
+
 fn p50k_edit() -> Result<Encoding, Error> {
-    let dict_data = include_bytes!("encodings/p50k_base.tiktoken");
+    let dict_data = Dict::P50kEdit.get_file();
     let merging_ranks = parse_dict_data(dict_data)?;
     let special_tokens = hashmap! {
         SpecialToken::EndOfText.to_string() => 50256,
@@ -145,33 +178,14 @@ fn p50k_edit() -> Result<Encoding, Error> {
 
     Ok(Encoding {
         dict: Dict::P50kEdit,
-        pattern: r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+"
-            .to_string(),
         merging_ranks,
         special_tokens,
         explicit_vocab_size: 0,
     })
 }
 
-fn p50k_base() -> Result<Encoding, Error> {
-    let dict_data = include_bytes!("encodings/p50k_base.tiktoken");
-    let merging_ranks = parse_dict_data(dict_data)?;
-    let special_tokens = hashmap! {
-        SpecialToken::EndOfText.to_string() => 50256,
-    };
-
-    Ok(Encoding {
-        dict: Dict::P50kBase,
-        pattern: r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"
-            .to_string(),
-        merging_ranks,
-        special_tokens,
-        explicit_vocab_size: 50281,
-    })
-}
-
 fn r50k_base() -> Result<Encoding, Error> {
-    let dict_data = include_bytes!("encodings/r50k_base.tiktoken");
+    let dict_data = Dict::R50kBase.get_file();
     let merging_ranks = parse_dict_data(dict_data)?;
     let special_tokens = hashmap! {
         SpecialToken::EndOfText.to_string() => 50256,
@@ -179,8 +193,6 @@ fn r50k_base() -> Result<Encoding, Error> {
 
     Ok(Encoding {
         dict: Dict::R50kBase,
-        pattern: r"'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"
-            .to_string(),
         merging_ranks,
         special_tokens,
         explicit_vocab_size: 50257,

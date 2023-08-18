@@ -189,31 +189,18 @@ where
         }
     }
     while parts.len() > 1 {
-        let mut min_rank = usize::MAX;
-        let mut min_idx: isize = -1;
-        for i in 0..parts.len() - 1 {
-            if parts[i][1] < min_rank {
-                min_rank = parts[i][1];
-                min_idx = i as isize;
-            }
-        }
-        if min_rank < usize::MAX {
-            let i = min_idx;
-            let rank = get_rank(i as usize, 1, &parts);
+        if let Some(min_idx) = (0..parts.len() - 1).min_by_key(|&i| parts[i][1]) {
+            let rank = get_rank(min_idx, 1, &parts);
             if rank >= 0 {
-                parts[i as usize][1] = rank as usize;
-            } else {
-                parts[i as usize][1] = usize::MAX;
+                parts[min_idx][1] = rank as usize;
             }
-            if i > 0 {
-                let rk = get_rank((i - 1) as usize, 1, &parts);
-                if rk > 0 {
-                    parts[(i - 1) as usize][1] = rk as usize;
-                } else {
-                    parts[(i - 1) as usize][1] = usize::MAX;
+            if min_idx > 0 {
+                let rk = get_rank(min_idx - 1, 1, &parts);
+                if rk >= 0 {
+                    parts[min_idx - 1][1] = rk as usize;
                 }
             }
-            parts.remove(i as usize + 1);
+            parts.remove(min_idx + 1);
         } else {
             break;
         }

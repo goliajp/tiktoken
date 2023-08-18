@@ -1,0 +1,16 @@
+[package]
+name = "tiktoken"
+version = "0.1.0"
+edition = "2021"
+include = ["src/encodings/cl100k_base.tiktoken", "src/encodings/p50k_base.tiktoken", "src/encodings/r50k_base.tiktoken"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "^1.0"
+base64 = "^0.21"
+lazy_static = "^1.4"
+maplit = "^1.0"
+pcre2 = "^0.2"
+rust_decimal = "^1.30"
+rust_decimal_macros = "^1.30"
