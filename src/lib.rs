@@ -1,7 +1,7 @@
-mod bpe;
-mod encoding;
-mod models;
-mod price;
+pub mod bpe;
+pub mod encoding;
+pub mod models;
+pub mod price;
 
 use bpe::CoreBpe;
 use encoding::Encoding;
